@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 
 void main() {
@@ -28,6 +29,23 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   final _reminderController = TextEditingController();
+  FlutterLocalNotificationsPlugin? _flutterLocalNotificationsPlugin;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  // Initialize the local notification plugin
+  void _initializeNotifications() {
+    _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+    const androidInitialization = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettings = InitializationSettings(android: androidInitialization);
+
+    _flutterLocalNotificationsPlugin!.initialize(initializationSettings);
+  }
 
   Future<void> _pickDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -42,7 +60,6 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
       });
   }
 
-
   Future<void> _pickTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -54,35 +71,68 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
       });
   }
 
-
+  // Format date and time for display
   String _formattedDate() {
     if (_selectedDate == null || _selectedTime == null) {
       return 'No reminder set';
     } else {
       final dateFormatted = DateFormat.yMMMMd().format(_selectedDate!);
-      final timeFormatted = _selectedTime!.format(context);
+      final timeFormatted = MaterialLocalizations.of(context).formatTimeOfDay(_selectedTime!);
       return '$dateFormatted at $timeFormatted';
     }
   }
 
+  // Schedule a notification at the selected time and date
+  void _scheduleReminder(DateTime reminderDateTime, String reminderText) async {
+    final androidDetails = AndroidNotificationDetails(
+      'reminder_channel_id',
+      'Reminder Notifications',
+      channelDescription: 'This channel is used for reminder notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
 
+    final notificationDetails = NotificationDetails(android: androidDetails);
+
+    await _flutterLocalNotificationsPlugin!.schedule(
+      0,
+      'Reminder',
+      reminderText,
+      reminderDateTime,
+      notificationDetails,
+    );
+  }
+
+  // Set the reminder and schedule a notification
   void _setReminder() {
     if (_reminderController.text.isNotEmpty && _selectedDate != null && _selectedTime != null) {
-      // Here, you would save the reminder to a database or use a service to notify
+      // Combine the selected date and time into one DateTime object
+      final reminderDateTime = DateTime(
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
+      );
+
+      _scheduleReminder(reminderDateTime, _reminderController.text);
+
+      // Show a dialog that the reminder has been set
       showDialog(
           context: context,
           builder: (_) => AlertDialog(
             title: Text("Reminder Set!"),
-            content: Text(
-                "Your reminder for '${_reminderController.text}' is set for ${_formattedDate()}."),
+            content: Text("Your reminder for '${_reminderController.text}' is set for ${_formattedDate()}."),
             actions: [
               TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text("OK"))
+                  child: Text("OK")
+              )
             ],
-          ));
+          )
+      );
     } else {
       showDialog(
           context: context,
@@ -94,9 +144,11 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text("OK"))
+                  child: Text("OK")
+              )
             ],
-          ));
+          )
+      );
     }
   }
 
@@ -104,7 +156,7 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reminder App',style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text('Reminder App', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: Padding(
@@ -119,57 +171,56 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_selectedDate == null ? 'Pick a Date' : 'Date: ${DateFormat.yMd().format(_selectedDate!)}',style: TextStyle(fontWeight: FontWeight.w700),),
+                Text(_selectedDate == null ? 'Pick a Date' : 'Date: ${DateFormat.yMd().format(_selectedDate!)}', style: TextStyle(fontWeight: FontWeight.w700)),
                 ElevatedButton(
                   onPressed: () => _pickDate(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Button background color
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero, // Set to zero for rectangular shape
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.purple), // Violet button color
+                    foregroundColor: MaterialStateProperty.all<Color>(Colors.white),  // White text color
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,  // Square edges
+                      ),
                     ),
                   ),
-                  child: Text(
-                    'Select Date',
-                    style: TextStyle(color: Colors.white), // Set text color to white
-                  ),
+                  child: Text('Select Date'),
                 ),
-
 
               ],
             ),
-            SizedBox(height: 15,),
+            SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_selectedTime == null ? 'Pick a Time' : 'Time: ${_selectedTime!.format(context)}',style: TextStyle(fontWeight: FontWeight.w700),),
+                Text(_selectedTime == null ? 'Pick a Time' : 'Time: ${_selectedTime!.format(context)}', style: TextStyle(fontWeight: FontWeight.w700)),
                 ElevatedButton(
                   onPressed: () => _pickTime(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Button background color
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero, // Set to zero for rectangular shape
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.purple), // Violet button color
+                    foregroundColor: MaterialStateProperty.all<Color>(Colors.white),  // White text color
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,  // Square edges
+                      ),
                     ),
                   ),
-                  child: Text(
-                    'Select Time',
-                    style: TextStyle(color: Colors.white), // Set text color to white
-                  ),
+                  child: Text('Select Time'),
                 ),
               ],
             ),
             SizedBox(height: 40),
             ElevatedButton(
               onPressed: _setReminder,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Button background color
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero, // Set to zero for rectangular shape
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.white), // Violet button color
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.purple),  // White text color
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,  // Square edges
+                  ),
                 ),
               ),
-              child: Text(
-                'Set reminder',
-                style: TextStyle(color: Colors.blue), // Set text color to white
-              ),
+              child: Text('Set Reminder'),
             ),
             SizedBox(height: 20),
             Text(_formattedDate()),

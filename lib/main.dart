@@ -104,7 +104,8 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reminder App'),
+        title: Text('Reminder App',style: TextStyle(fontWeight: FontWeight.bold),),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -118,27 +119,57 @@ class _ReminderHomePageState extends State<ReminderHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_selectedDate == null ? 'Pick a Date' : 'Date: ${DateFormat.yMd().format(_selectedDate!)}'),
+                Text(_selectedDate == null ? 'Pick a Date' : 'Date: ${DateFormat.yMd().format(_selectedDate!)}',style: TextStyle(fontWeight: FontWeight.w700),),
                 ElevatedButton(
                   onPressed: () => _pickDate(context),
-                  child: Text('Select Date'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue, // Button background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero, // Set to zero for rectangular shape
+                    ),
+                  ),
+                  child: Text(
+                    'Select Date',
+                    style: TextStyle(color: Colors.white), // Set text color to white
+                  ),
                 ),
+
+
               ],
             ),
+            SizedBox(height: 15,),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_selectedTime == null ? 'Pick a Time' : 'Time: ${_selectedTime!.format(context)}'),
+                Text(_selectedTime == null ? 'Pick a Time' : 'Time: ${_selectedTime!.format(context)}',style: TextStyle(fontWeight: FontWeight.w700),),
                 ElevatedButton(
                   onPressed: () => _pickTime(context),
-                  child: Text('Select Time'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue, // Button background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero, // Set to zero for rectangular shape
+                    ),
+                  ),
+                  child: Text(
+                    'Select Time',
+                    style: TextStyle(color: Colors.white), // Set text color to white
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 40),
             ElevatedButton(
               onPressed: _setReminder,
-              child: Text('Set Reminder'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white, // Button background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.zero, // Set to zero for rectangular shape
+                ),
+              ),
+              child: Text(
+                'Set reminder',
+                style: TextStyle(color: Colors.blue), // Set text color to white
+              ),
             ),
             SizedBox(height: 20),
             Text(_formattedDate()),
